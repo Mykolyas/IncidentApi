@@ -3,18 +3,17 @@
 public class IncidentRequestDto
 {
     [Required]
-    public string AccountName { get; set; }
+    public string AccountName { get; set; } = null!;
 
     [Required]
-    public string ContactFirstName { get; set; }
+    public string ContactFirstName { get; set; } = null!;
 
     [Required]
-    public string ContactLastName { get; set; }
+    public string ContactLastName { get; set; } = null!;
+
+    [Required, EmailAddress]
+    public string ContactEmail { get; set; } = null!;
 
     [Required]
-    [EmailAddress]
-    public string ContactEmail { get; set; }
-
-    [Required]
-    public string IncidentDescription { get; set; }
+    public string IncidentDescription { get; set; } = null!;
 }
