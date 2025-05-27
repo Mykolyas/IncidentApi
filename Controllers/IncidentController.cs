@@ -49,7 +49,7 @@ public class IncidentController : ControllerBase
 
         var incident = new Incident
         {
-            IncidentName = Guid.NewGuid().ToString(), // <== додано
+            IncidentName = Guid.NewGuid().ToString(),
             Description = request.IncidentDescription,
             Account = account
         };
