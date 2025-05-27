@@ -1,63 +1,34 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/[controller]")]
 public class IncidentController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly IIncidentService _incidentService;
 
-    public IncidentController(AppDbContext context)
+    public IncidentController(IIncidentService incidentService)
     {
-        _context = context;
+        _incidentService = incidentService;
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateIncident([FromBody] IncidentRequestDto request)
+    public async Task<IActionResult> Create([FromBody] IncidentRequestDto request)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var account = await _context.Accounts
-            .Include(a => a.Contacts)
-            .FirstOrDefaultAsync(a => a.Name == request.AccountName);
-
-        if (account == null)
+        try
+        {
+            var incidentName = await _incidentService.CreateIncidentAsync(request);
+            return Ok(new { incidentName });
+        }
+        catch (KeyNotFoundException)
+        {
             return NotFound("Account not found");
-
-        var contact = await _context.Contacts.FirstOrDefaultAsync(c => c.Email == request.ContactEmail);
-
-        if (contact != null)
-        {
-            contact.FirstName = request.ContactFirstName;
-            contact.LastName = request.ContactLastName;
-
-            if (contact.AccountId != account.Id)
-                contact.AccountId = account.Id;
         }
-        else
+        catch (Exception ex)
         {
-            contact = new Contact
-            {
-                FirstName = request.ContactFirstName,
-                LastName = request.ContactLastName,
-                Email = request.ContactEmail,
-                AccountId = account.Id
-            };
-            _context.Contacts.Add(contact);
+            return StatusCode(500, "Server error: " + ex.Message);
         }
-
-        var incident = new Incident
-        {
-            IncidentName = Guid.NewGuid().ToString(),
-            Description = request.IncidentDescription,
-            Account = account
-        };
-
-        _context.Incidents.Add(incident);
-        await _context.SaveChangesAsync();
-
-        return Ok(new { incident.IncidentName });
     }
-
 }
